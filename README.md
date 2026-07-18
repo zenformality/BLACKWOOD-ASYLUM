@@ -162,4 +162,4 @@ Find all 5 for the complete story.
 
 ---
 
-*Made with Pygame | All content procedurally generated*
+*Made with Pygame | zenx.pc*
