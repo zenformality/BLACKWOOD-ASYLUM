@@ -7,6 +7,7 @@ import random
 import pygame
 
 from config import MAP_W, MAP_H, TILE
+from assets import img_enemy
 
 
 class Enemy:
@@ -98,16 +99,21 @@ class Enemy:
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
 
-        can_see = self.can_see_player(player, tile_map)
-
-        # Flashlight stun — entity freezes when the beam hits it
-        if can_see and player.flashlight_on:
-            dist = math.hypot(player.x - self.x, player.y - self.y)
-            if dist < player.flashlight_radius * 0.8:
+        # Flashlight stun — entity freezes when the beam hits it (highest priority)
+        dist = math.hypot(player.x - self.x, player.y - self.y)
+        if player.flashlight_on and dist < player.flashlight_radius * 0.85:
+            angle_to_enemy = math.atan2(self.y - player.y, self.x - player.x)
+            angle_diff = abs(angle_to_enemy - player.facing)
+            while angle_diff > math.pi:
+                angle_diff = abs(angle_diff - 2 * math.pi)
+            if angle_diff < 0.6:  # ~34 degree cone
                 self.state = "freeze"
+                print(f"FLASHLIGHT FREEZE: dist={dist:.0f}, angle={angle_diff:.2f}")
                 return
         elif self.state == "freeze":
             self.state = "patrol"
+
+        can_see = self.can_see_player(player, tile_map)
 
         if can_see:
             self.state = "chase"
@@ -124,7 +130,7 @@ class Enemy:
                 self.x += nx * self.chase_speed
                 self.y += ny * self.chase_speed
 
-            if dist < self.attack_range:
+            if dist < self.attack_range and self.attack_cooldown <= 0:
                 player.take_damage(self.attack_damage)
                 self.attack_cooldown = self.attack_rate
 
@@ -156,24 +162,29 @@ class Enemy:
         sx = self.x - camera_x
         sy = self.y - camera_y
 
-        # Shadowy body
-        body = pygame.Surface((50, 60), pygame.SRCALPHA)
-        pygame.draw.ellipse(body, (15, 15, 18), (8, 0, 34, 50))
-        pygame.draw.ellipse(body, (10, 10, 12), (12, 10, 26, 30))
+        # Use enemy image if available
+        if img_enemy:
+            img = pygame.transform.scale(img_enemy, (80, 96))
+            surf.blit(img, (sx - 40, sy - 48))
+        else:
+            # Fallback procedural drawing
+            body = pygame.Surface((80, 96), pygame.SRCALPHA)
+            pygame.draw.ellipse(body, (15, 15, 18), (10, 0, 60, 80))
+            pygame.draw.ellipse(body, (10, 10, 12), (18, 16, 44, 48))
 
-        # Glowing red eyes
-        ex = 25 + math.cos(self.eye_dir) * 4
-        ey = 18
-        glow = int(200 * self.eye_glow)
-        pygame.draw.circle(body, (glow, 20, 20), (int(ex - 6), int(ey)), 4)
-        pygame.draw.circle(body, (glow, 20, 20), (int(ex + 6), int(ey)), 4)
-        pygame.draw.circle(body, (255, 50, 50), (int(ex - 6), int(ey)), 2)
-        pygame.draw.circle(body, (255, 50, 50), (int(ex + 6), int(ey)), 2)
+            # Glowing red eyes
+            ex = 40 + math.cos(self.eye_dir) * 6
+            ey = 28
+            glow = int(200 * self.eye_glow)
+            pygame.draw.circle(body, (glow, 20, 20), (int(ex - 10), int(ey)), 7)
+            pygame.draw.circle(body, (glow, 20, 20), (int(ex + 10), int(ey)), 7)
+            pygame.draw.circle(body, (255, 50, 50), (int(ex - 10), int(ey)), 3)
+            pygame.draw.circle(body, (255, 50, 50), (int(ex + 10), int(ey)), 3)
 
-        surf.blit(body, (sx - 25, sy - 30))
+            surf.blit(body, (sx - 40, sy - 48))
 
-        # Under-glow
-        glow_surf = pygame.Surface((60, 20), pygame.SRCALPHA)
-        glow_alpha = int(40 * self.eye_glow)
-        pygame.draw.ellipse(glow_surf, (200, 0, 0, glow_alpha), (0, 0, 60, 20))
-        surf.blit(glow_surf, (sx - 30, sy + 15))
+            # Under-glow
+            glow_surf = pygame.Surface((90, 30), pygame.SRCALPHA)
+            glow_alpha = int(40 * self.eye_glow)
+            pygame.draw.ellipse(glow_surf, (200, 0, 0, glow_alpha), (0, 0, 90, 30))
+            surf.blit(glow_surf, (sx - 45, sy + 30))

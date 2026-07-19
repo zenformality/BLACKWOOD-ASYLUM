@@ -14,7 +14,11 @@ from config import (
     font_huge, font_big, font_mid, font_small, font_tiny,
     font_note, font_note_b,
 )
-from assets import img_jumpscare, img_title_bg
+from assets import (
+    img_jumpscare, img_title_bg,
+    img_player, img_enemy, img_health, img_battery, img_note,
+    img_key_red, img_key_blue, img_key_green, img_key_yellow,
+)
 from utils import draw_text, draw_text_alpha, lerp
 from story import STORY_NOTES
 
@@ -73,46 +77,67 @@ def _draw_special_tile(surf, sx, sy, tile, frame):
 
     # ── Key ──────────────────────────────────────────────────────────────
     elif tile.startswith('k'):
-        colors = {'kR': KEY_RED, 'kB': KEY_BLUE, 'kG': KEY_GREEN, 'kY': KEY_YELLOW}
         surf.fill(FLOOR_COLOR, (sx, sy, TILE, TILE))
-        c = colors.get(tile, YELLOW)
-        kx, ky = sx + TILE // 2, sy + TILE // 2
-        pygame.draw.circle(surf, c, (kx, ky - 4), 6, 2)
-        pygame.draw.line(surf, c, (kx, ky + 2), (kx, ky + 14), 3)
-        pygame.draw.line(surf, c, (kx, ky + 10), (kx + 6, ky + 10), 3)
-        pygame.draw.line(surf, c, (kx, ky + 14), (kx + 4, ky + 14), 3)
-        glow = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
-        ga = int(30 + 20 * math.sin(frame * 0.05))
-        pygame.draw.circle(glow, (*c, ga), (TILE // 2, TILE // 2), 20)
-        surf.blit(glow, (sx, sy))
+        key_img = {'kR': img_key_red, 'kB': img_key_blue, 'kG': img_key_green, 'kY': img_key_yellow}.get(tile)
+        if key_img:
+            img = pygame.transform.scale(key_img, (TILE, TILE))
+            surf.blit(img, (sx, sy))
+        else:
+            # Fallback
+            colors = {'kR': KEY_RED, 'kB': KEY_BLUE, 'kG': KEY_GREEN, 'kY': KEY_YELLOW}
+            c = colors.get(tile, YELLOW)
+            kx, ky = sx + TILE // 2, sy + TILE // 2
+            pygame.draw.circle(surf, c, (kx, ky - 4), 6, 2)
+            pygame.draw.line(surf, c, (kx, ky + 2), (kx, ky + 14), 3)
+            pygame.draw.line(surf, c, (kx, ky + 10), (kx + 6, ky + 10), 3)
+            pygame.draw.line(surf, c, (kx, ky + 14), (kx + 4, ky + 14), 3)
+            glow = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+            ga = int(30 + 20 * math.sin(frame * 0.05))
+            pygame.draw.circle(glow, (*c, ga), (TILE // 2, TILE // 2), 20)
+            surf.blit(glow, (sx, sy))
 
     # ── Note ─────────────────────────────────────────────────────────────
     elif tile.startswith('n'):
         surf.fill(FLOOR_COLOR, (sx, sy, TILE, TILE))
-        pygame.draw.rect(surf, (200, 200, 180), (sx + 10, sy + 8, 28, 32))
-        pygame.draw.rect(surf, (180, 180, 160), (sx + 10, sy + 8, 28, 32), 2)
-        for i in range(3):
-            pygame.draw.line(surf, (140, 140, 130),
-                             (sx + 14, sy + 16 + i * 8),
-                             (sx + 34, sy + 16 + i * 8))
+        if img_note:
+            img = pygame.transform.scale(img_note, (TILE, TILE))
+            surf.blit(img, (sx, sy))
+        else:
+            # Fallback
+            pygame.draw.rect(surf, (200, 200, 180), (sx + 10, sy + 8, 28, 32))
+            pygame.draw.rect(surf, (180, 180, 160), (sx + 10, sy + 8, 28, 32), 2)
+            for i in range(3):
+                pygame.draw.line(surf, (140, 140, 130),
+                                 (sx + 14, sy + 16 + i * 8),
+                                 (sx + 34, sy + 16 + i * 8))
 
     # ── Health pickup ────────────────────────────────────────────────────
     elif tile == 'h':
         surf.fill(FLOOR_COLOR, (sx, sy, TILE, TILE))
-        pygame.draw.rect(surf, RED, (sx + 14, sy + 10, 20, 28))
-        pygame.draw.rect(surf, WHITE, (sx + 20, sy + 14, 8, 20))
-        pygame.draw.rect(surf, WHITE, (sx + 14, sy + 20, 20, 8))
+        if img_health:
+            img = pygame.transform.scale(img_health, (TILE, TILE))
+            surf.blit(img, (sx, sy))
+        else:
+            # Fallback
+            pygame.draw.rect(surf, RED, (sx + 14, sy + 10, 20, 28))
+            pygame.draw.rect(surf, WHITE, (sx + 20, sy + 14, 8, 20))
+            pygame.draw.rect(surf, WHITE, (sx + 14, sy + 20, 20, 8))
 
     # ── Battery pickup ───────────────────────────────────────────────────
     elif tile == 'b':
         surf.fill(FLOOR_COLOR, (sx, sy, TILE, TILE))
-        pygame.draw.rect(surf, (100, 100, 100), (sx + 14, sy + 12, 20, 24))
-        pygame.draw.rect(surf, (150, 150, 150), (sx + 18, sy + 8, 12, 6))
-        pygame.draw.polygon(surf, YELLOW, [
-            (sx + 26, sy + 14), (sx + 20, sy + 24),
-            (sx + 25, sy + 24), (sx + 22, sy + 34),
-            (sx + 30, sy + 22), (sx + 25, sy + 22),
-        ])
+        if img_battery:
+            img = pygame.transform.scale(img_battery, (TILE, TILE))
+            surf.blit(img, (sx, sy))
+        else:
+            # Fallback
+            pygame.draw.rect(surf, (100, 100, 100), (sx + 14, sy + 12, 20, 24))
+            pygame.draw.rect(surf, (150, 150, 150), (sx + 18, sy + 8, 12, 6))
+            pygame.draw.polygon(surf, YELLOW, [
+                (sx + 26, sy + 14), (sx + 20, sy + 24),
+                (sx + 25, sy + 24), (sx + 22, sy + 34),
+                (sx + 30, sy + 22), (sx + 25, sy + 22),
+            ])
 
     # ── Exit ─────────────────────────────────────────────────────────────
     elif tile == 'E':
@@ -135,40 +160,47 @@ def draw_player(surf, player, camera_x, camera_y):
     if player.hurt_timer > 0 and player.hurt_timer % 4 < 2:
         return
 
-    body = pygame.Surface((24, 24), pygame.SRCALPHA)
-    pygame.draw.circle(body, (200, 170, 140), (12, 8), 7)    # head
-    pygame.draw.rect(body, (50, 60, 100), (6, 14, 12, 10))   # torso
+    # Use image if available, else procedural
+    if img_player:
+        img = pygame.transform.scale(img_player, (64, 64))
+        surf.blit(img, (sx - 32, sy - 32))
+    else:
+        body = pygame.Surface((48, 48), pygame.SRCALPHA)
+        pygame.draw.circle(body, (200, 170, 140), (24, 16), 14)    # head
+        pygame.draw.rect(body, (50, 60, 100), (12, 28, 24, 20))   # torso
+
+        if player.flashlight_on:
+            fx = math.cos(player.facing) * 32
+            fy = math.sin(player.facing) * 32
+            glow = pygame.Surface((16, 16), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (255, 240, 180, 80), (8, 8), 8)
+            body.blit(glow, (int(24 + fx - 8), int(16 + fy - 8)))
+
+        surf.blit(body, (sx - 24, sy - 24))
 
     if player.flashlight_on:
-        fx = math.cos(player.facing) * 16
-        fy = math.sin(player.facing) * 16
-        glow = pygame.Surface((8, 8), pygame.SRCALPHA)
-        pygame.draw.circle(glow, (255, 240, 180, 80), (4, 4), 4)
-        body.blit(glow, (int(12 + fx - 4), int(8 + fy - 4)))
-
-    surf.blit(body, (sx - 12, sy - 12))
-
-    if player.flashlight_on:
-        beam_len = 40
+        beam_len = 60
         ex = sx + math.cos(player.facing) * beam_len
         ey = sy + math.sin(player.facing) * beam_len
-        pygame.draw.line(surf, (255, 240, 150, 60), (int(sx), int(sy)), (int(ex), int(ey)), 2)
+        pygame.draw.line(surf, (255, 240, 150, 60), (int(sx), int(sy)), (int(ex), int(ey)), 3)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  DARKNESS / LIGHTING
 # ══════════════════════════════════════════════════════════════════════════════
 
-def draw_darkness(surf, player):
+def draw_darkness(surf, player, camera_x=0, camera_y=0):
     if not player:
         return
 
     fog = pygame.Surface((W, H), pygame.SRCALPHA)
 
+    # Convert player world pos to screen pos
+    px = int(player.x - camera_x)
+    py = int(player.y - camera_y)
+
     if player.flashlight_on:
         fog.fill((0, 0, 0, 180))
-        px = int(player.x)
-        py = int(player.y)
         radius = player.flashlight_radius
         pygame.draw.circle(fog, (0, 0, 0, 0), (px, py), int(radius))
         for r in range(int(radius), int(radius + 80), 5):
@@ -176,8 +208,6 @@ def draw_darkness(surf, player):
             pygame.draw.circle(fog, (0, 0, 0, a), (px, py), r)
     else:
         fog.fill((0, 0, 0, 210))
-        px = int(player.x)
-        py = int(player.y)
         for r in range(60, 0, -3):
             a = int(210 * (1 - r / 60))
             pygame.draw.circle(fog, (0, 0, 0, max(0, 210 - a)), (px, py), r)
@@ -253,6 +283,77 @@ def draw_hud(surf, player, message, message_timer, game_time):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  INTERACTION PROMPT
+# ══════════════════════════════════════════════════════════════════════════════
+
+def draw_interact_prompt(surf, player, tile_map, camera_x, camera_y):
+    """Draw 'E' prompt on nearby interactable tiles."""
+    if not player:
+        return
+    
+    px = int(player.x // TILE)
+    py = int(player.y // TILE)
+    
+    interactable = ('kR', 'kB', 'kG', 'kY',  # keys
+                    'n1', 'n2', 'n3', 'n4', 'n5',  # notes
+                    'R', 'B', 'G', 'Y',  # doors
+                    'E')  # exit
+    
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            tx, ty = px + dx, py + dy
+            if not (0 <= tx < MAP_W and 0 <= ty < MAP_H):
+                continue
+            tile = tile_map[ty][tx]
+            if isinstance(tile, str) and tile in interactable:
+                sx = tx * TILE - camera_x
+                sy = ty * TILE - camera_y
+                
+                # Pulsing "E" prompt above tile
+                pulse = 1.0 + 0.15 * math.sin(pygame.time.get_ticks() * 0.008)
+                font = font_small
+                color = (255, 255, 100)
+                draw_text(surf, "[E]", font, color, sx + TILE // 2, sy - 10)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  INTERACTION PROMPT (E icon on nearby interactables)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def draw_interact_prompt(surf, player, tile_map, camera_x, camera_y):
+    """Draw 'E' prompt on nearby interactable tiles."""
+    if not player:
+        return
+    
+    px = int(player.x // TILE)
+    py = int(player.y // TILE)
+    
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            tx, ty = px + dx, py + dy
+            if not (0 <= tx < MAP_W and 0 <= ty < MAP_H):
+                continue
+            tile = tile_map[ty][tx]
+            
+            # Check if interactable
+            is_interactable = False
+            if isinstance(tile, str):
+                if tile.startswith('k'):  # keys
+                    is_interactable = True
+                elif tile.startswith('n'):  # notes
+                    is_interactable = True
+                elif tile in ('R', 'B', 'G', 'Y'):  # locked doors
+                    is_interactable = True
+                elif tile == 'E':  # exit
+                    is_interactable = True
+            
+            if is_interactable:
+                sx = tx * TILE - camera_x + TILE // 2
+                sy = ty * TILE - camera_y - 20
+                # Pulsing E
+                alpha = int(180 + 75 * math.sin(pygame.time.get_ticks() * 0.01))
+                alpha = max(0, min(255, alpha))
+                draw_text_alpha(surf, "E", font_mid, YELLOW, sx, sy, alpha)
 #  SANITY / HALLUCINATION OVERLAY
 # ══════════════════════════════════════════════════════════════════════════════
 

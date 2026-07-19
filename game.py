@@ -143,7 +143,7 @@ class Game:
 
         # Player movement
         keys = pygame.key.get_pressed()
-        self.player.update(keys, self.tile_map)
+        self.player.update(keys, self.tile_map, self.camera_x, self.camera_y)
 
         # Tile pickups + interaction
         self._handle_auto_pickups()
@@ -302,9 +302,10 @@ class Game:
             renderer.draw_player(s, self.player, self.camera_x, self.camera_y)
             for enemy in self.enemies:
                 enemy.draw(s, self.camera_x, self.camera_y)
-            renderer.draw_darkness(s, self.player)
+            renderer.draw_darkness(s, self.player, self.camera_x, self.camera_y)
             renderer.draw_sanity_effects(s, self.player, self.frame)
             renderer.draw_hud(s, self.player, self.message, self.message_timer, self.game_time)
+            renderer.draw_interact_prompt(s, self.player, self.tile_map, self.camera_x, self.camera_y)
 
             self.camera_x, self.camera_y = saved
 

@@ -39,6 +39,7 @@ class Player:
         self.hurt_timer = 0      # flash when hit
         self.invuln_timer = 0    # i-frames
         self.footstep_timer = 0
+        self.sanity_timer = 0    # sanity sound cooldown
         self.bob = 0.0           # walk animation offset
         self.alive = True
 
@@ -60,7 +61,7 @@ class Player:
 
     # ── Update (called every frame) ─────────────────────────────────────────
 
-    def update(self, keys_pressed, tile_map):
+    def update(self, keys_pressed, tile_map, camera_x=0, camera_y=0):
         dx, dy = 0.0, 0.0
 
         if keys_pressed[pygame.K_w] or keys_pressed[pygame.K_UP]:
@@ -85,9 +86,11 @@ class Player:
                 snd_footstep.play()
                 self.footstep_timer = 15
 
-        # Mouse aiming
+        # Mouse aiming - convert screen coords to world coords
         mx, my = pygame.mouse.get_pos()
-        self.facing = math.atan2(my - self.y, mx - self.x)
+        world_mx = mx + camera_x
+        world_my = my + camera_y
+        self.facing = math.atan2(world_my - self.y, world_mx - self.x)
 
         # Movement with wall collision (test X and Y separately)
         new_x = self.x + dx
@@ -121,7 +124,10 @@ class Player:
             self.sanity = max(0, self.sanity - 0.05)
 
         # Low-sanity hallucination trigger
-        if self.sanity < 30 and random.random() < 0.01:
-            snd_sanity_low.play()
+        if self.sanity < 30:
+            self.sanity_timer += 1
+            if self.sanity_timer >= 300 and random.random() < 0.02:
+                snd_sanity_low.play()
+                self.sanity_timer = 0
 
 
